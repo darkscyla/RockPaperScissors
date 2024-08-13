@@ -12,6 +12,10 @@ const GameState = Object.freeze({
   LOSE: Symbol("lose"),
 });
 
+// Mutable globals (eww)
+let humanScore = 0;
+let computerScore = 0;
+
 // Choses a random option for a list of options (with uniform sampling)
 const getComputerChoice = () =>
   options[Math.floor(Math.random() * options.length)];
@@ -51,36 +55,31 @@ const playRound = (humanChoice, computerChoice) => {
   }
 };
 
-const playGame = (number_of_rounds) => {
-  let humanScore = 0;
-  let computerScore = 0;
+const playGame = (humanChoice) => {
+  const computerChoice = getComputerChoice();
+  const return_message = [];
+  return_message.push(
+    `The human chose: ${humanChoice} --- The overlord chose: ${computerChoice}`
+  );
 
-  for (let index = 0; index < number_of_rounds; ++index) {
-    const computerChoice = getComputerChoice();
-    const humanChoice = getHumanChoice();
-    console.log(
-      `The human chose: ${humanChoice} --- The overlord chose: ${computerChoice}`
-    );
+  const result = playRound(humanChoice, computerChoice);
+  switch (result) {
+    case GameState.WIN:
+      return_message.push("The overlord lets this one slide!");
+      humanScore += 1;
+      break;
 
-    const result = playRound(humanChoice, computerChoice);
-    switch (result) {
-      case GameState.WIN:
-        console.log("The overlord lets this one slide!");
-        humanScore += 1;
-        break;
+    case GameState.LOSE:
+      return_message.push("The overlord knows the future!");
+      computerScore += 1;
+      break;
 
-      case GameState.LOSE:
-        console.log("The overlord knows the future!");
-        computerScore += 1;
-        break;
-
-      default:
-        console.log("The overlord time is wasted!");
-        break;
-    }
+    default:
+      return_message.push("The overlord time is wasted!");
+      break;
   }
 
-  console.log(
+  return_message.push(
     `Human score: ${humanScore} --- Overlord score: ${computerScore}`
   );
   const message =
@@ -89,10 +88,47 @@ const playGame = (number_of_rounds) => {
       : humanScore > computerScore
       ? "The human is sentenced to death!"
       : "The overlord forgives the human this time!";
-  console.log(message);
+  return_message.push(message);
+
+  return return_message.join("\r\n");
 };
 
-const main = () => playGame(rounds);
+const main = () => {
+  // Create the buttons and append them to div
+  const container = document.querySelector("#container");
+
+  const button_div = document.createElement("div");
+  const message_div = document.createElement("div");
+
+  // Create buttons
+  const rock_button = document.createElement("button");
+  rock_button.textContent = "Rock";
+
+  const paper_button = document.createElement("button");
+  paper_button.textContent = "Paper";
+
+  const scissors_button = document.createElement("button");
+  scissors_button.textContent = "Scissors";
+
+  [rock_button, paper_button, scissors_button].forEach((item) => {
+    item.addEventListener("click", (button) => {
+      const humanChoice = button.currentTarget.textContent;
+      message_div.textContent = playGame(humanChoice);
+    });
+
+    item.style = "padding: 10px; margin: 10px";
+    button_div.appendChild(item);
+  });
+
+  
+  [button_div, message_div].forEach((item) => {
+    item.style = "display: flex; align-items: center; justify-content: center;";
+  });
+  message_div.style.whiteSpace = "pre-wrap";
+  
+  container.appendChild(button_div);
+  container.appendChild(message_div);
+};
 
 // Entry point
 main();
